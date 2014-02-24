@@ -61,7 +61,7 @@ endif
 #
 
 # Define project name here
-PROJECT = rfmote_example
+PROJECT = rfboard_chibios
 
 # Imported source files and paths
 CHIBIOS = ../../ChibiOS-RT-master
