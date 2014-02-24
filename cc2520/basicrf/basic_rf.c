@@ -453,9 +453,6 @@ uint8 basicRfSendPacket(uint16 destAddr, uint8* pPayload, uint8 length) {
 
 		// If an acknowledgment has been received (by RxFrmDoneIsr), the ackReceived flag should be set
 		status = txState.ackReceived ? SUCCESS : FAILED;
-
-	} else if (status == SUCCESS) {
-		status = SUCCESS;
 	}
 
 	// Turn off the receiver if it should not continue to be enabled
