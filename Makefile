@@ -243,3 +243,6 @@ build/$(PROJECT).bin: build/$(PROJECT).elf
 upload: build/$(PROJECT).bin
 #	qstlink2 --cli --erase --write build/$(PROJECT).bin
 	openocd -f interface/stlink-v2.cfg -c "set WORKAREASIZE 0x2000" -f target/stm32f4x_stlink.cfg -c "program build/$(PROJECT).elf verify reset"
+
+debug-start:
+	openocd -f stm32-bv_openocd.cfg

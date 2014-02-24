@@ -165,7 +165,7 @@ int main(void) {
 	halAssyInit();
 	basicRfConfig.panId = PAN_ID;
 	basicRfConfig.channel = RF_CHANNEL;
-	basicRfConfig.ackRequest = TRUE;
+	basicRfConfig.ackRequest = FALSE;
 	basicRfConfig.myAddr = NODE_ADDRESS;
 
 	if(basicRfInit(&basicRfConfig) == FAILED) {
