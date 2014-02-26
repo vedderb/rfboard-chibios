@@ -241,8 +241,8 @@ static void basicRfRxFrmDoneIsr(void) {
 	// Map header to packet buffer
 	pHdr= (basicRfPktHdr_t*)rxMpdu;
 
-	// Clear interrupt and disable new RX frame done interrupt
-	halRfDisableRxInterrupt();
+	// Clear interrupt
+	CLEAR_EXC_RX_FRM_DONE();
 
 	// Read payload length.
 	halRfReadRxBuf(&pHdr->packetLength,1);
@@ -332,8 +332,6 @@ static void basicRfRxFrmDoneIsr(void) {
 		rxi.seqNumber = pHdr->seqNumber;
 	}
 
-	halRfEnableRxInterrupt();
-
 	chMtxUnlock();
 }
 
@@ -420,9 +418,6 @@ uint8 basicRfSendPacket(uint16 destAddr, uint8* pPayload, uint8 length) {
 	chMtxLock(&rf_mutex);
 	halRfWaitTransceiverReady();
 
-	// Turn off RX frame done interrupt to avoid interference on the SPI interface
-	halRfDisableRxInterrupt();
-
 	mpduLength = basicRfBuildMpdu(destAddr, pPayload, length);
 
 #ifdef SECURITY_CCM
@@ -431,15 +426,13 @@ uint8 basicRfSendPacket(uint16 destAddr, uint8* pPayload, uint8 length) {
 #else
 	halRfWriteTxBuf(txMpdu, mpduLength);
 #endif
-	chMtxUnlock();
-
-	// Turn on RX frame done interrupt for ACK reception
-	halRfEnableRxInterrupt();
 
 	// Send frame with CCA. return FAILED if not successful
 	if(halRfTransmit() != SUCCESS) {
 		status = FAILED;
 	}
+
+	chMtxUnlock();
 
 	// Wait for the acknowledge to be received, if any
 	if (pConfig->ackRequest && status == SUCCESS) {
@@ -460,9 +453,7 @@ uint8 basicRfSendPacket(uint16 destAddr, uint8* pPayload, uint8 length) {
 		basicRfReceiveOff();
 	}
 
-	if(status == SUCCESS) {
-		txState.txSeqNumber++;
-	}
+	txState.txSeqNumber++;
 
 #ifdef SECURITY_CCM
 	chMtxLock(&rf_mutex);

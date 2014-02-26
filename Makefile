@@ -90,7 +90,6 @@ CSRC = $(PORTSRC) \
        $(CC2520SRC) \
        main.c \
        myUSB.c \
-       utils.c \
        led.c \
        irq_handlers.c
        

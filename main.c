@@ -13,7 +13,6 @@
 
 #include "led.h"
 #include "myUSB.h"
-#include "utils.h"
 
 // CC2520
 #include "hal_cc2520.h"
@@ -140,7 +139,7 @@ static msg_t rf_tx_thread(void *arg) {
 		} else {
 			led_write(LED_GREEN, 0);
 		}
-		chThdSleepMilliseconds(100);
+		chThdSleepMilliseconds(50);
 
 		tx_buffer[0] = 0;
 		if (basicRfSendPacket(DEST_ADDRESS, tx_buffer, 1) == SUCCESS) {
@@ -148,7 +147,7 @@ static msg_t rf_tx_thread(void *arg) {
 		} else {
 			led_write(LED_GREEN, 0);
 		}
-		chThdSleepMilliseconds(100);
+		chThdSleepMilliseconds(50);
 	}
 
 	return 0;
@@ -157,7 +156,6 @@ static msg_t rf_tx_thread(void *arg) {
 int main(void) {
 	halInit();
 	chSysInit();
-	utils_init();
 	led_init();
 	myUSBinit();
 
@@ -165,7 +163,7 @@ int main(void) {
 	halAssyInit();
 	basicRfConfig.panId = PAN_ID;
 	basicRfConfig.channel = RF_CHANNEL;
-	basicRfConfig.ackRequest = FALSE;
+	basicRfConfig.ackRequest = TRUE;
 	basicRfConfig.myAddr = NODE_ADDRESS;
 
 	if(basicRfInit(&basicRfConfig) == FAILED) {

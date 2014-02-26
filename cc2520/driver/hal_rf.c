@@ -6,7 +6,7 @@
 
  ***********************************************************************************/
 
-#pragma GCC optimize ("O0")
+//#pragma GCC optimize ("O0")
 
 /***********************************************************************************
  * INCLUDES
@@ -15,7 +15,6 @@
 #include "hal_cc2520.h"
 #include "util.h"
 #include "stm32_hw.h"
-#include "utils.h"
 
 #include <stdint.h>
 
@@ -446,7 +445,7 @@ uint8 halRfWriteMemory(uint16 addr, uint8* pData, uint8 length) {
  * @return  uint8 - SUCCESS or FAILED
  */
 uint8 halRfTransmit(void) {
-	uint16 timeout = 2500; // 2500 x 20us = 50ms
+	uint16 timeout = 500; // 500 x 100us = 50ms
 	uint8 status = 0;
 
 	// Wait for RSSI to become valid
@@ -462,8 +461,7 @@ uint8 halRfTransmit(void) {
 		if (CC2520_SAMPLED_CCA_PIN) {
 			break;
 		}
-
-		utils_delay_us(20);
+		chThdSleepMicroseconds(100);
 	}
 
 	if (timeout == 0) {
@@ -574,7 +572,7 @@ void halRfRxInterruptConfig(void (*func)(void)) {
 
 	// Connect EXTI Line
 	EXTI_ClearITPendingBit(EXTI_Line7 );
-	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource7 );
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource7);
 
 	// Configure EXTI Lines
 	EXTI_InitStructure.EXTI_Line = EXTI_Line7;
@@ -585,8 +583,8 @@ void halRfRxInterruptConfig(void (*func)(void)) {
 
 	// Enable and set EXTI Line Interrupts
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
@@ -643,7 +641,9 @@ void halRfEnableRxInterrupt(void) {
  */
 
 void halRfIRQ(void) {
+	chSysLockFromIsr();
 	chEvtSignalI(isr_tp, (eventmask_t) 1);
+	chSysUnlockFromIsr();
 }
 
 static msg_t isrThread(void *arg) {
@@ -703,10 +703,10 @@ static uint8 halRfWaitRadioReady(void) {
 	uint8 i;
 
 	// Wait for XOSC stable to be announced on the MISO pin
-	i= 100;
+	i= 50;
 	CC2520_CSN_OPIN(0);
 	while (i > 0 && !CC2520_MISO_IPIN) {
-		utils_delay_us(10);
+		chThdSleepMicroseconds(100);
 		--i;
 	}
 	CC2520_CSN_OPIN(1);
