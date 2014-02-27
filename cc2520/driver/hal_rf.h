@@ -53,7 +53,7 @@
 * GLOBAL FUNCTIONS
 */
 
-void halRfIRQ(void);
+void halRfExtCb(EXTDriver *extp, expchannel_t channel);
 
 // Generic RF interface
 uint8 halRfInit(void);

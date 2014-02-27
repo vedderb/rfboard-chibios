@@ -2,8 +2,6 @@
 #include "hal.h"
 #include "chprintf.h"
 #include "myUSB.h"
-#include "stm32f4xx.h"
-#include "stm32f4xx_conf.h"
 #include "shell.h"
 
 #include <stdio.h>
@@ -13,17 +11,13 @@
 
 #include "led.h"
 #include "myUSB.h"
+#include "ext_cb.h"
 
 // CC2520
 #include "hal_cc2520.h"
 #include "hal_rf.h"
 #include "hal_rf_util.h"
 #include "basic_rf.h"
-
-/*
- * Timers used:
- * TIM13: utils
- */
 
 // Settings
 #define RF_CHANNEL			26
@@ -55,22 +49,6 @@ static void cmd_mem(BaseSequentialStream *chp, int argc, char *argv[]) {
 	chprintf(chp, "heap free total  : %u bytes\r\n", size);
 }
 
-static void cmd_clocks(BaseSequentialStream *chp, int argc, char *argv[]) {
-	(void)argv;
-	if (argc > 0) {
-		chprintf(chp, "Usage: clocks\r\n");
-		return;
-	}
-
-	RCC_ClocksTypeDef RCC_Clocks;
-	RCC_GetClocksFreq(&RCC_Clocks);
-
-	chprintf(chp, "System Clock:  %u\r\n", RCC_Clocks.SYSCLK_Frequency);
-	chprintf(chp, "HCLK        :  %u\r\n", RCC_Clocks.HCLK_Frequency);
-	chprintf(chp, "PCLK1       :  %u\r\n", RCC_Clocks.PCLK1_Frequency);
-	chprintf(chp, "PCLK2       :  %u\r\n", RCC_Clocks.PCLK2_Frequency);
-}
-
 static void cmd_threads(BaseSequentialStream *chp, int argc, char *argv[]) {
 	static const char *states[] = {THD_STATE_NAMES};
 	Thread *tp;
@@ -94,7 +72,6 @@ static void cmd_threads(BaseSequentialStream *chp, int argc, char *argv[]) {
 
 static const ShellCommand commands[] = {
 		{"mem", cmd_mem},
-		{"clocks", cmd_clocks},
 		{"threads", cmd_threads},
 		{NULL, NULL}
 };
@@ -158,6 +135,7 @@ int main(void) {
 	chSysInit();
 	led_init();
 	myUSBinit();
+	ext_cb_init();
 
 	// rf
 	halAssyInit();

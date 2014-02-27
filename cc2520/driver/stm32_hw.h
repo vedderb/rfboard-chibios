@@ -6,7 +6,6 @@
  */
 #include "ch.h"
 #include "hal.h"
-#include "stm32f4xx_conf.h"
 #include "hal_defs.h"
 
 /***********************************************************************************
@@ -26,9 +25,9 @@
 		palSetPadMode(GPIOB, 15, PAL_MODE_INPUT);
 
 #define CC2520_ENABLE_SPI_FUNC() \
-		palSetPadMode(GPIOB, 13, PAL_MODE_ALTERNATE(GPIO_AF_SPI2) | PAL_STM32_OSPEED_HIGHEST); \
-		palSetPadMode(GPIOB, 14, PAL_MODE_ALTERNATE(GPIO_AF_SPI2)); \
-		palSetPadMode(GPIOB, 15, PAL_MODE_ALTERNATE(GPIO_AF_SPI2) | PAL_STM32_OSPEED_HIGHEST);
+		palSetPadMode(GPIOB, 13, PAL_MODE_ALTERNATE(GPIO_AF_SPI) | PAL_STM32_OSPEED_HIGHEST); \
+		palSetPadMode(GPIOB, 14, PAL_MODE_ALTERNATE(GPIO_AF_SPI)); \
+		palSetPadMode(GPIOB, 15, PAL_MODE_ALTERNATE(GPIO_AF_SPI) | PAL_STM32_OSPEED_HIGHEST);
 
 // GPIO pin direction control
 #define CC2520_GPIO_DIR_OUT(pin) \
@@ -94,14 +93,20 @@
 #define CC2520_MISO_IPIN				palReadPad(GPIOB, 14)
 #define CC2520_MISO_OPIN(v)				MCU_SET_PIN_VAL(GPIOB, 14, v)
 #define CC2520_MISO_DIR_IN()			palSetPadMode(GPIOB, 14, PAL_MODE_OUTPUT_PUSHPULL | PAL_STM32_OSPEED_HIGHEST)
-#define CC2520_MISO_DIR_OUT()			palSetPadMode(GPIOB, 14, PAL_MODE_ALTERNATE(GPIO_AF_SPI2))
+#define CC2520_MISO_DIR_OUT()			palSetPadMode(GPIOB, 14, PAL_MODE_ALTERNATE(GPIO_AF_SPI))
+
+// SPI HW
+#define CC2520_SPI							SPID2
+#define CC2520_SPI_CSN_PORT					GPIOB
+#define CC2520_SPI_CSN_PIN					12
+#define GPIO_AF_SPI							5
 
 // SPI access macros
-#define CC2520_SPI_BEGIN()				CC2520_CSN_OPIN(0)
-#define CC2520_SPI_TX(x)				SPI_I2S_SendData(SPI2, x)
-#define CC2520_SPI_RX()					SPI_I2S_ReceiveData(SPI2)
-#define CC2520_SPI_WAIT_RXRDY()			while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE));
-#define CC2520_SPI_END()				CC2520_CSN_OPIN(1)
+#define CC2520_SPI_BEGIN()					spiSelect(&CC2520_SPI)
+#define CC2520_SPI_TXRX(x)					halSpiExc(x)
+#define CC2520_INS_WR_ARRAY(count, pData)	spiSend(&CC2520_SPI, count, pData)
+#define CC2520_INS_RD_ARRAY(count, pData)	spiReceive(&CC2520_SPI, count, pData)
+#define CC2520_SPI_END()					spiUnselect(&CC2520_SPI)
 
 
 // Platform specific definitions
@@ -126,5 +131,6 @@
  * PUBLIC FUNCTIONS
  */
 void halAssyInit(void);
+unsigned char halSpiExc(unsigned char x);
 
 #endif

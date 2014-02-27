@@ -567,27 +567,6 @@ void halIntOff(void) {
 }
 
 void halRfRxInterruptConfig(void (*func)(void)) {
-	EXTI_InitTypeDef EXTI_InitStructure;
-	NVIC_InitTypeDef NVIC_InitStructure;
-
-	// Connect EXTI Line
-	EXTI_ClearITPendingBit(EXTI_Line7 );
-	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource7);
-
-	// Configure EXTI Lines
-	EXTI_InitStructure.EXTI_Line = EXTI_Line7;
-	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-	EXTI_Init(&EXTI_InitStructure);
-
-	// Enable and set EXTI Line Interrupts
-	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
-
 	// Set function pointer
 	gpio0_func = func;
 
@@ -605,14 +584,7 @@ void halRfRxInterruptConfig(void (*func)(void)) {
  */
 void halRfDisableRxInterrupt(void) {
 	CLEAR_EXC_RX_FRM_DONE();
-
-	EXTI_InitTypeDef EXTI_InitStructure;
-
-	EXTI_InitStructure.EXTI_Line = EXTI_Line7;
-	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-	EXTI_InitStructure.EXTI_LineCmd = DISABLE;
-	EXTI_Init(&EXTI_InitStructure);
+	extChannelDisable(&EXTD1, 7);
 }
 
 /***********************************************************************************
@@ -625,22 +597,17 @@ void halRfDisableRxInterrupt(void) {
  * @return  none
  */
 void halRfEnableRxInterrupt(void) {
-	EXTI_InitTypeDef EXTI_InitStructure;
-
-	EXTI_ClearITPendingBit(EXTI_Line7);
-
-	EXTI_InitStructure.EXTI_Line = EXTI_Line7;
-	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-	EXTI_Init(&EXTI_InitStructure);
+	extChannelEnable(&EXTD1, 7);
 }
 
 /**
  * External interrupt handler for lines 9 to 5
  */
 
-void halRfIRQ(void) {
+void halRfExtCb(EXTDriver *extp, expchannel_t channel) {
+	(void)extp;
+	(void)channel;
+
 	chSysLockFromIsr();
 	chEvtSignalI(isr_tp, (eventmask_t) 1);
 	chSysUnlockFromIsr();
@@ -648,7 +615,7 @@ void halRfIRQ(void) {
 
 static msg_t isrThread(void *arg) {
 	(void) arg;
-	chRegSetThreadName("cc2520IsrThread");
+	chRegSetThreadName("CC2520 EXTI");
 
 	isr_tp = chThdSelf();
 

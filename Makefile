@@ -6,7 +6,6 @@
 # Compiler options here.
 ifeq ($(USE_OPT),)
   USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16 -std=gnu99
-  USE_OPT += -DSTM32F40_41xxx
 endif
 
 # C specific options here (added to USE_OPT).
@@ -44,12 +43,12 @@ endif
 
 # Enables the use of FPU on Cortex-M4.
 ifeq ($(USE_FPU),)
-  USE_FPU = no
+  USE_FPU = yes
 endif
 
 # Enable this if you really want to use the STM FWLib.
 ifeq ($(USE_FWLIB),)
-  USE_FWLIB = yes
+  USE_FWLIB = no
 endif
 
 #
@@ -91,7 +90,7 @@ CSRC = $(PORTSRC) \
        main.c \
        myUSB.c \
        led.c \
-       irq_handlers.c
+       ext_cb.c
        
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -226,7 +225,7 @@ ifeq ($(USE_FWLIB),yes)
   include $(CHIBIOS)/ext/stdperiph_stm32f4/stm32lib.mk
   CSRC += $(STM32SRC)
   INCDIR += $(STM32INC)
-  USE_OPT += -DUSE_STDPERIPH_DRIVER
+  USE_OPT += -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx
 endif
 
 include $(CHIBIOS)/os/ports/GCC/ARMCMx/rules.mk

@@ -47,16 +47,8 @@ typedef union {
 static uint8 GotException(uint8 index);
 static uint8 waitException(uint8 exc, uint16 timeOut);
 static void clearException(uint32 dwMap);
-static void CC2520_INS_RD_ARRAY(uint16 count, uint8  *pData);
 static uint8 CC2520_INS_MEMCP_COMMON(uint8 instr, uint8 pri, uint16 count, \
 		uint16 src, uint16 dest);
-
-static uint8 CC2520_SPI_TXRX(uint8 x)
-{
-	CC2520_SPI_TX(x);
-	CC2520_SPI_WAIT_RXRDY();
-	return CC2520_SPI_RX();
-}
 
 /***********************************************************************************
  * @fn      GotException
@@ -90,13 +82,13 @@ static uint8 GotException(uint8 index)
  */
 static uint8 waitException(uint8 exc, uint16 timeOut)
 {
-	timeOut /= 100;
+	timeOut /= 10;
 
 	while (--timeOut > 0) {
 		if (GotException(exc))
 			break;
 //		halMcuWaitUs(10);
-		chThdSleepMilliseconds(1);
+		chThdSleepMicroseconds(100);
 	}
 	return timeOut>0;
 }
@@ -115,28 +107,6 @@ static void clearException(uint32 dwMap)
 {
 	CC2520_REGWR24(CC2520_EXCFLAG0, ~dwMap);
 }
-
-
-/***********************************************************************************
- * @fn      CC2520_INS_RD_ARRAY
- *
- * @brief   Read array from CC2520
- *
- * @param   uint16 count -
- *          uint8  *pData -
- *
- * @return  none
- */
-static void CC2520_INS_RD_ARRAY(uint16 count, uint8  *pData)
-{
-	while (count--) {
-		CC2520_SPI_TX(0x00);
-		CC2520_SPI_WAIT_RXRDY();
-		*pData = CC2520_SPI_RX();
-		pData++;
-	}
-}
-
 
 
 /***********************************************************************************
@@ -164,31 +134,6 @@ static uint8 CC2520_INS_MEMCP_COMMON(uint8 instr, uint8 pri, uint16 count, \
 	CC2520_SPI_TXRX(LO_UINT16(dest));
 	CC2520_SPI_END();
 	return s;
-}
-
-
-/***********************************************************************************
- * GLOBAL FUNCTIONS
- */
-
-/***********************************************************************************
- * @fn      CC2520_INS_WR_ARRAY
- *
- * @brief   Write array to CC2520
- *
- * @param   uint16 count -
- *          uint8  *pData -
- *
- * @return  none
- */
-void CC2520_INS_WR_ARRAY(uint16 count, uint8  *pData)
-{
-	while (count--) {
-		CC2520_SPI_TX(*pData);
-		pData++;
-		CC2520_SPI_WAIT_RXRDY();
-		CC2520_SPI_RX(); // Dummy read
-	}
 }
 
 
