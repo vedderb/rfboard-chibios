@@ -645,12 +645,16 @@ void halRfWaitTransceiverReady(void) {
 	HAL_INT_OFF();
 	// GPIO2 = SFD
 	CC2520_CFG_GPIO_OUT(2,CC2520_GPIO_SFD);
-	while (CC2520_GPIO2_IPIN);
+	while (CC2520_GPIO2_IPIN) {
+//		chThdSleep(1);
+	};
 	// GPIO2 = default (RSSI_VALID)
 	CC2520_CFG_GPIO_OUT(2,CC2520_GPIO_RSSI_VALID);
 	HAL_INT_ON();
 #else
-	while (CC2520_GPIO3_IPIN){};
+	while (CC2520_GPIO3_IPIN){
+//		chThdSleep(1);
+	};
 #endif
 }
 

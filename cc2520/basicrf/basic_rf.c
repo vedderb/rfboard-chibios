@@ -19,7 +19,7 @@
 #endif
 
 #include "util.h"               // Using min()
-#include "string.h"
+#include <string.h>
 
 /***********************************************************************************
  * CONSTANTS AND DEFINES
@@ -129,6 +129,7 @@ static uint8 txMpdu[BASIC_RF_MAX_PAYLOAD_SIZE+BASIC_RF_PACKET_OVERHEAD_SIZE+1];
 static uint8 rxMpdu[128];
 static Mutex rf_mutex;
 static Mutex rf_send_mutex;
+static WORKING_AREA(basicRf_thread_wa, 256);
 
 /***********************************************************************************
  * GLOBAL VARIABLES
@@ -139,6 +140,29 @@ static Mutex rf_send_mutex;
  * LOCAL FUNCTIONS
  */
 
+/**
+ * This thread only checks if the CC2520 has gotten the RX_OVERFLOW exception and
+ * flushes the rx buffer in that case. This is because it will stop receiving
+ * packets otherwise.
+ */
+static msg_t basicRf_thread(void *arg) {
+	(void)arg;
+
+	chRegSetThreadName("CC2520 EXC");
+
+	for(;;) {
+		chMtxLock(&rf_mutex);
+		if (CC2520_REGRD8(CC2520_EXCFLAG0) & (1 << CC2520_EXC_RX_OVERFLOW)) {
+			halRfFlushRx();
+			CC2520_CLEAR_EXC(CC2520_EXC_RX_OVERFLOW);
+		}
+		chMtxUnlock();
+
+		chThdSleepMilliseconds(5);
+	}
+
+	return 0;
+}
 
 /***********************************************************************************
  * @fn          basicRfBuildHeader
@@ -383,6 +407,8 @@ uint8 basicRfInit(basicRfCfg_t* pRfConfig) {
 	// Set up receive interrupt (received data or acknowlegment)
 	halRfRxInterruptConfig(basicRfRxFrmDoneIsr);
 
+	chThdCreateStatic(basicRf_thread_wa, sizeof(basicRf_thread_wa), NORMALPRIO - 4, basicRf_thread, NULL);
+
 	return SUCCESS;
 }
 
@@ -413,12 +439,12 @@ uint8 basicRfSendPacket(uint16 destAddr, uint8* pPayload, uint8 length) {
 
 	// Check packet length
 	length = min(length, BASIC_RF_MAX_PAYLOAD_SIZE);
+	mpduLength = basicRfBuildMpdu(destAddr, pPayload, length);
 
 	// Wait until the transceiver is idle
-	chMtxLock(&rf_mutex);
 	halRfWaitTransceiverReady();
 
-	mpduLength = basicRfBuildMpdu(destAddr, pPayload, length);
+	chMtxLock(&rf_mutex);
 
 #ifdef SECURITY_CCM
 	halRfWriteTxBufSecure(txMpdu, mpduLength, length, BASIC_RF_LEN_AUTH, BASIC_RF_SECURITY_M);
@@ -570,6 +596,12 @@ uint8_t basicRfGetExceptionRegister(uint8 index) {
 	uint8_t b = CC2520_REGRD8(CC2520_EXCFLAG0 + index);
 	chMtxUnlock();
 	return b;
+}
+
+void basicRfClearException(uint8 exception) {
+	chMtxLock(&rf_mutex);
+	CC2520_CLEAR_EXC(exception);
+	chMtxUnlock();
 }
 
 void basicRfFlushRx(void) {

@@ -79,6 +79,7 @@ void basicRfReceiveOff(void);
 uint16 basicRfGetSouceAddress(void);
 
 uint8_t basicRfGetExceptionRegister(uint8 index);
+void basicRfClearException(uint8 exception);
 void basicRfFlushRx(void);
 
 /***********************************************************************************
