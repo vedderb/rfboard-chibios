@@ -146,7 +146,8 @@ static regVal_t regval[] = {
 #else
 		{CC2520_GPIOCTRL3, CC2520_GPIO_SFD},
 		{CC2520_GPIOCTRL4, CC2520_GPIO_SNIFFER_DATA},
-		{CC2520_GPIOCTRL5, CC2520_GPIO_SNIFFER_CLK},
+//		{CC2520_GPIOCTRL5, CC2520_GPIO_SNIFFER_CLK},
+		{CC2520_GPIOCTRL5, 1 + CC2520_EXC_RX_OVERFLOW},
 #endif
 		// Terminate array
 		{0, 0x00} };
@@ -646,14 +647,14 @@ void halRfWaitTransceiverReady(void) {
 	// GPIO2 = SFD
 	CC2520_CFG_GPIO_OUT(2,CC2520_GPIO_SFD);
 	while (CC2520_GPIO2_IPIN) {
-//		chThdSleep(1);
+		chThdSleep(1);
 	};
 	// GPIO2 = default (RSSI_VALID)
 	CC2520_CFG_GPIO_OUT(2,CC2520_GPIO_RSSI_VALID);
 	HAL_INT_ON();
 #else
-	while (CC2520_GPIO3_IPIN){
-//		chThdSleep(1);
+	while (CC2520_SFD_PIN){
+		chThdSleep(1);
 	};
 #endif
 }

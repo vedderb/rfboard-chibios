@@ -151,14 +151,14 @@ static msg_t basicRf_thread(void *arg) {
 	chRegSetThreadName("CC2520 EXC");
 
 	for(;;) {
-		chMtxLock(&rf_mutex);
-		if (CC2520_REGRD8(CC2520_EXCFLAG0) & (1 << CC2520_EXC_RX_OVERFLOW)) {
+		if (CC2520_RX_OVERFLOW_PIN) {
+			chMtxLock(&rf_mutex);
 			halRfFlushRx();
 			CC2520_CLEAR_EXC(CC2520_EXC_RX_OVERFLOW);
+			chMtxUnlock();
 		}
-		chMtxUnlock();
 
-		chThdSleepMilliseconds(5);
+		chThdSleepMilliseconds(1);
 	}
 
 	return 0;
@@ -407,7 +407,7 @@ uint8 basicRfInit(basicRfCfg_t* pRfConfig) {
 	// Set up receive interrupt (received data or acknowlegment)
 	halRfRxInterruptConfig(basicRfRxFrmDoneIsr);
 
-	chThdCreateStatic(basicRf_thread_wa, sizeof(basicRf_thread_wa), NORMALPRIO - 4, basicRf_thread, NULL);
+	chThdCreateStatic(basicRf_thread_wa, sizeof(basicRf_thread_wa), NORMALPRIO, basicRf_thread, NULL);
 
 	return SUCCESS;
 }
