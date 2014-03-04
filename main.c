@@ -32,6 +32,14 @@ static basicRfCfg_t basicRfConfig;
 static WORKING_AREA(rf_rx_thread_wa, 2048);
 static WORKING_AREA(rf_tx_thread_wa, 2048);
 static uint8_t rx_buffer[RX_BUFFER_LENGTH];
+#ifdef SECURITY_CCM
+static uint8_t rf_security_key[] = {
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		1, 2, 3, 4,
+		5, 6, 7, 8
+};
+#endif
 
 #define SHELL_WA_SIZE   THD_WA_SIZE(512)
 
@@ -143,6 +151,9 @@ int main(void) {
 	basicRfConfig.channel = RF_CHANNEL;
 	basicRfConfig.ackRequest = TRUE;
 	basicRfConfig.myAddr = NODE_ADDRESS;
+#ifdef SECURITY_CCM
+	basicRfConfig.securityKey = rf_security_key;
+#endif
 
 	if(basicRfInit(&basicRfConfig) == FAILED) {
 		for(;;) {}

@@ -62,7 +62,6 @@ typedef struct {
     uint8 ackRequest;
     #ifdef SECURITY_CCM
     uint8* securityKey;
-    uint8* securityNonce;
     #endif
 } basicRfCfg_t;
 
@@ -78,7 +77,7 @@ void basicRfReceiveOn(void);
 void basicRfReceiveOff(void);
 uint16 basicRfGetSouceAddress(void);
 
-uint8_t basicRfGetExceptionRegister(uint8 index);
+uint8 basicRfGetExceptionRegister(uint8 index);
 void basicRfClearException(uint8 exception);
 void basicRfFlushRx(void);
 

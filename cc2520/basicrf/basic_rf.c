@@ -401,7 +401,7 @@ uint8 basicRfInit(basicRfCfg_t* pRfConfig) {
 
 	// if security is enabled, write key and nonce
 #ifdef SECURITY_CCM
-	basicRfSecurityInit(pConfig);
+	basicRfSecurityInit((basicRfCfg_t*)pConfig);
 #endif
 
 	// Set up receive interrupt (received data or acknowlegment)
@@ -591,7 +591,7 @@ void basicRfReceiveOff(void) {
 
 
 
-uint8_t basicRfGetExceptionRegister(uint8 index) {
+uint8 basicRfGetExceptionRegister(uint8 index) {
 	chMtxLock(&rf_mutex);
 	uint8_t b = CC2520_REGRD8(CC2520_EXCFLAG0 + index);
 	chMtxUnlock();
