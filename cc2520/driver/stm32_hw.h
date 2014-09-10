@@ -104,8 +104,8 @@
 // SPI access macros
 #define CC2520_SPI_BEGIN()					spiSelect(&CC2520_SPI)
 #define CC2520_SPI_TXRX(x)					halSpiExc(x)
-#define CC2520_INS_WR_ARRAY(count, pData)	spiSend(&CC2520_SPI, count, pData)
-#define CC2520_INS_RD_ARRAY(count, pData)	spiReceive(&CC2520_SPI, count, pData)
+#define CC2520_INS_WR_ARRAY(count, pData)	(count > 0 ? spiSend(&CC2520_SPI, count, pData):0)
+#define CC2520_INS_RD_ARRAY(count, pData)	(count > 0 ? spiReceive(&CC2520_SPI, count, pData):0)
 #define CC2520_SPI_END()					spiUnselect(&CC2520_SPI)
 
 
